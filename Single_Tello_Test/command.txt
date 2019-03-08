@@ -1,0 +1,15 @@
+command
+takeoff
+rc 0 0 0 -20
+rc 0 0 0 20
+rc 0 0 0 -20
+rc 0 0 0 20
+rc 0 0 0 -20
+rc 0 0 0 20
+rc 0 0 0 -20
+rc 0 0 0 20
+rc 0 0 0 -20
+rc 0 0 0 20
+rc 0 0 0 -20
+rc 0 0 0 20
+land
