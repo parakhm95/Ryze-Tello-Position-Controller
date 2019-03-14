@@ -33,6 +33,11 @@ def recv():
             print ('\nExit . . .\n')
             break
 
+print ('\r\n\r\nTello Python3 Demo.\r\n')
+
+print ('Tello: command takeoff land flip forward back left right \r\n       up down cw ccw speed speed?\r\n')
+
+print ('end -- quit demo.\r\n')
 
 #recvThread create
 recvThread = threading.Thread(target=recv)
