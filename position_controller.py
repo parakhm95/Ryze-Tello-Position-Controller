@@ -15,7 +15,8 @@ from sensor_msgs.msg import Joy
 host = ''
 port = 9000
 locaddr = (host,port)
-lastpose = PoseStamped()
+error_x_prev = 0.00
+error_y_prev = 0.00
 goal = [-4.00,0.00]
 accum_x = 0.00
 accum_y = 0.00
@@ -74,11 +75,11 @@ msg('speed 100')
 def nanocall(joy_msg):
     global goal
     if joy_msg.buttons[16]==1:
-        goal[0] = -2.5
+        goal[0] = -3.0
     if joy_msg.buttons[17]==1:
-        goal[0] = -5.5
-    if joy_msg.buttons[17]==1:
-        goal[0] = -5.5
+        goal[0] = -6.0
+    # if joy_msg.buttons[17]==1:
+    #     goal[0] = -5.5
 
 def exit_land():
     msg('land')
@@ -90,7 +91,7 @@ def exit_land():
 
 
 def position_get(posestamped_msg):
-    global lastpose,goal,accum_x,accum_y
+    global error_x_prev, error_y_prev,goal,accum_x,accum_y
     x = posestamped_msg.pose.position.x
     y = posestamped_msg.pose.position.y
 
@@ -104,13 +105,12 @@ def position_get(posestamped_msg):
     pitch = euler[1]
     yaw = euler[2]
     #rotation matrix from world to robot frame
-    goal_x = float(goal[0]*math.cos(yaw) + goal[1]*math.sin(yaw))
-    goal_y = float(-goal[0]*math.sin(yaw) + goal[1]*math.cos(yaw))
+    error_x = float((goal[0]-x)*math.cos(yaw) + (goal[1]-y)*math.sin(yaw))
+    error_y = float(-(goal[0]-x)*math.sin(yaw) + (goal[1]-y)*math.cos(yaw))
 
     # x position control PID
-    currenterror =  float(goal_x - x)
-    accum_x = accum_x + currenterror
-    output_x = int((50*(currenterror)) + -80*(x - lastpose.pose.position.x) + 0.0*accum_x)
+    accum_x = accum_x + error_x
+    output_x = int((70*(error_x)) + 100*(error_x - error_x_prev) + 0.0*accum_x)
     if(output_x > 100):
         output_x = 100
     elif(output_x < -100):
@@ -119,12 +119,11 @@ def position_get(posestamped_msg):
         accum_x = 300
     elif(accum_x < -300):
         accum_x = -300
-    print currenterror
+    
 
     # y position control PID
-    currenterror =  float(goal_y - y)
-    accum_y = accum_y + currenterror
-    output_y = -int((50*(currenterror)) + -80*(y - lastpose.pose.position.y) + 0.0*accum_y)
+    accum_y = accum_y + error_y
+    output_y = -int((70*(error_y)) + 100*(error_y - error_y_prev) + 0.0*accum_y)
     if(output_y > 100):
         output_y = 100
     elif(output_y < -100):
@@ -135,7 +134,8 @@ def position_get(posestamped_msg):
         accum_y = -300
     #commanding tello
     msg('rc %s %s 0 0' % (output_y,output_x))
-    lastpose = posestamped_msg
+    error_x_prev = error_x
+    error_y_prev = error_y
     
 
 def tello_position():
