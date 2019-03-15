@@ -17,7 +17,7 @@ port = 9000
 locaddr = (host,port)
 error_x_prev = 0.00
 error_y_prev = 0.00
-goal = [-4.00,0.00]
+goal = [4.00,0.00]
 accum_x = 0.00
 accum_y = 0.00
 
@@ -75,9 +75,9 @@ msg('speed 100')
 def nanocall(joy_msg):
     global goal
     if joy_msg.buttons[16]==1:
-        goal[0] = -3.0
+        goal[0] = 4.0
     if joy_msg.buttons[17]==1:
-        goal[0] = -6.0
+        goal[0] = 7.0
     # if joy_msg.buttons[17]==1:
     #     goal[0] = -5.5
 
@@ -110,7 +110,7 @@ def position_get(posestamped_msg):
 
     # x position control PID
     accum_x = accum_x + error_x
-    output_x = int((70*(error_x)) + 100*(error_x - error_x_prev) + 0.0*accum_x)
+    output_x = int((45*(error_x)) + 3700*(error_x - error_x_prev) + 0.0*accum_x)
     if(output_x > 100):
         output_x = 100
     elif(output_x < -100):
@@ -118,12 +118,11 @@ def position_get(posestamped_msg):
     if(accum_x > 300):
         accum_x = 300
     elif(accum_x < -300):
-        accum_x = -300
-    
+        accum_x = -300    
 
     # y position control PID
     accum_y = accum_y + error_y
-    output_y = -int((70*(error_y)) + 100*(error_y - error_y_prev) + 0.0*accum_y)
+    output_y = -int((45*(error_y)) + 3700*(error_y - error_y_prev) + 0.0*accum_y)
     if(output_y > 100):
         output_y = 100
     elif(output_y < -100):
@@ -136,6 +135,7 @@ def position_get(posestamped_msg):
     msg('rc %s %s 0 0' % (output_y,output_x))
     error_x_prev = error_x
     error_y_prev = error_y
+    print("%s,%s" % (output_x,output_y))
     
 
 def tello_position():
