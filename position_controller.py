@@ -11,15 +11,18 @@ import platform
 import tf
 from tf.transformations import euler_from_quaternion
 from sensor_msgs.msg import Joy
+from nav_msgs.msg import Odometry
 
 host = ''
 port = 9000
 locaddr = (host,port)
 error_x_prev = 0.00
 error_y_prev = 0.00
-goal = [4.00,0.00]
+error_z_prev = 0.00
+goal = [7.00,0.00,1.00]
 accum_x = 0.00
 accum_y = 0.00
+accum_z = 0.00
 
 
 # Create a UDP socket
@@ -75,9 +78,9 @@ msg('speed 100')
 def nanocall(joy_msg):
     global goal
     if joy_msg.buttons[16]==1:
-        goal[0] = 4.0
+        goal[2] = 1.5
     if joy_msg.buttons[17]==1:
-        goal[0] = 7.0
+        goal[2] = 0.5
     # if joy_msg.buttons[17]==1:
     #     goal[0] = -5.5
 
@@ -91,15 +94,16 @@ def exit_land():
 
 
 def position_get(posestamped_msg):
-    global error_x_prev, error_y_prev,goal,accum_x,accum_y
-    x = posestamped_msg.pose.position.x
-    y = posestamped_msg.pose.position.y
+    global error_x_prev, error_y_prev,error_z_prev,goal,accum_x,accum_y,accum_z
+    x = posestamped_msg.pose.pose.position.x
+    y = posestamped_msg.pose.pose.position.y
+    z = posestamped_msg.pose.pose.position.z
 
     # quaternion to euler
-    quaternion = (posestamped_msg.pose.orientation.x,
-        posestamped_msg.pose.orientation.y,
-        posestamped_msg.pose.orientation.z,
-        posestamped_msg.pose.orientation.w)
+    quaternion = (posestamped_msg.pose.pose.orientation.x,
+        posestamped_msg.pose.pose.orientation.y,
+        posestamped_msg.pose.pose.orientation.z,
+        posestamped_msg.pose.pose.orientation.w)
     euler = tf.transformations.euler_from_quaternion(quaternion)
     roll = euler[0]
     pitch = euler[1]
@@ -107,6 +111,7 @@ def position_get(posestamped_msg):
     #rotation matrix from world to robot frame
     error_x = float((goal[0]-x)*math.cos(yaw) + (goal[1]-y)*math.sin(yaw))
     error_y = float(-(goal[0]-x)*math.sin(yaw) + (goal[1]-y)*math.cos(yaw))
+    error_z = float(goal[2] - z)
 
     # x position control PID
     accum_x = accum_x + error_x
@@ -131,16 +136,29 @@ def position_get(posestamped_msg):
         accum_y = 300
     elif(accum_y < -300):
         accum_y = -300
+
+    #z position control PID
+    accum_z = accum_z + error_z
+    output_z = int(105*error_z - 20*(posestamped_msg.twist.twist.linear.z) + 0.05*accum_z)
+    if (output_z > 100):
+        output_z=100
+    elif (output_z < -100):
+        output_z= -100
+    if (accum_z > 300):
+        accum_z=300
+    elif (accum_z < -300):
+        accum_z=-300
+
     #commanding tello
-    msg('rc %s %s 0 0' % (output_y,output_x))
+    msg('rc %s %s %s 0' % (output_y,output_x,output_z))
     error_x_prev = error_x
     error_y_prev = error_y
-    print("%s,%s" % (output_x,output_y))
+    print("%s,%s,%s" % (output_x,output_y,output_z))
     
 
 def tello_position():
     rospy.init_node('tello_position', anonymous=True)   
-    rospy.Subscriber("/vicon/tello/pose", PoseStamped, position_get)
+    rospy.Subscriber("/vicon/tello/odom", Odometry, position_get)
     rospy.Subscriber("/nanokontrol2", Joy, nanocall)
     freq = 100  # hz
     rate = rospy.Rate(freq)
