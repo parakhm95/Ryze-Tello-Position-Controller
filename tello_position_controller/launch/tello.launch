@@ -8,7 +8,7 @@
     <param name="max_accel" value="10.0"/>
     <param name="publish_tf" value="false"/>
     <param name="fixed_frame_id" value="mocap"/>
-    <rosparam param="model_list">[tello]</rosparam>
+    <rosparam param="model_list">[tello,octahold]</rosparam>
   </node>
 
 
@@ -16,5 +16,8 @@
 	</include>
 
 	<node pkg="tello_position_controller" name="tello_position_controller" type="position_controller_new.py" output="screen">
+  </node>
+
+    <node pkg="tello_position_controller" name="takeoff_nanokontrol" type="takeoff_nanokontrol.py" output="screen">
   </node>
 </launch>
