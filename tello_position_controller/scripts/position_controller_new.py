@@ -18,12 +18,13 @@ port = 9000
 locaddr = (host,port)
 prev_error = [0.00,0.00,0.00]
 goal = GoTo()
+telemetry = GoTo()
 goal.x = 7.00
 goal.y = 0.00
 goal.z = 1.00
 goal.yaw = 0.00
 accum = [0.00,0.00,0.00]
-gains = [[600,600,0.1], [600, 600, 0.1], [105, 20, 0.08], [30, 0, 0.00]]
+gains = [[600,600,0.15], [600, 600, 0.15], [135, 20, 0.13], [30, 0, 0.00]]
 data = None
 takeoff_flag = False
 output = [0,0,0,0]
@@ -91,7 +92,7 @@ def goal(GoTo_msg):
 
 def position_get(odometry_msg):
     # print(rospy.get_time())
-    global prev_error,goal,accum, output
+    global prev_error,goal,accum, output, telemetry
     x = odometry_msg.pose.pose.position.x
     y = odometry_msg.pose.pose.position.y
     z = odometry_msg.pose.pose.position.z
@@ -115,14 +116,14 @@ def position_get(odometry_msg):
     if takeoff_flag is True:
         # x position control PID
         accum[0] = accum[0] + error_x
-        output[0] = int((gains[0][0]*(error_x)) + gains[0][1]*100*(error_x - prev_error[0]) + gains[0][2]*accum[0])
+        output[0]=int((gains[0][0] * (error_x)) + gains[0][1] * (-vel_x) + gains[0][2] * accum[0])
         output[0] = limiter(output[0],-100,100)
         accum[0] = limiter(accum[0],-450,450)
 
 
         # y position control PID
         accum[1] = accum[1] + error_y
-        output[1] = -int((gains[1][0]*(error_y)) + gains[1][1]*100*(error_y - prev_error[1]) + gains[1][2]*accum[1])
+        output[1]=-int((gains[1][0] * (error_y)) + gains[1][1] * (-vel_y) + gains[1][2] * accum[1])
         output[1] = limiter(output[1],-100,100)
         accum[1] = limiter(accum[1],-450,450)
         # print(error_y - prev_error[1])
@@ -145,7 +146,10 @@ def position_get(odometry_msg):
         # print("%s,%s,%s %s" % (output[0],output[1],output[2],output[3]))
         # print("%s,%s" %(error_x - prev_error[0], vel_x))
         # print("%s,%s" % (error_y - prev_error[1], vel_y))
-
+        print("%s,%s,%s" % (accum[0],accum[1],accum[2]))
+        datastream=rospy.Publisher('/tello/datastream', GoTo, queue_size=0)
+        telemetry.x,telemetry.y,telemetry.z,telemetry.yaw = error_y,error_y - prev_error[1],gains[1][2]*accum[1],vel_y
+        datastream.publish(telemetry)
         #saving last state
         prev_error[0]=error_x
         prev_error[1]=error_y

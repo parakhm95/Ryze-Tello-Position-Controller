@@ -135,6 +135,7 @@ def callback(joy_msg):
         z1 = quad1.pose.position.z
         w1 = 2*math.acos(quad1.pose.orientation.w)
         goal2.x,goal2.y,goal2.z,goal2.yaw = x1-0.072*math.sin(w1),y1 + 0.058*math.cos(w1),z1+0.4,w1
+        goal2.x, goal2.y, goal2.z, goal2.yaw = 7.0,0.0,1.0,1.0
 
     if joy_msg.buttons[17] == 1:
         startup = 1
@@ -143,6 +144,7 @@ def callback(joy_msg):
         z1 = quad1.pose.position.z
         w1 = 2*math.acos(quad1.pose.orientation.w)
         goal2.x,goal2.y,goal2.z,goal2.yaw = x1-0.072*math.sin(w1),y1 + 0.058*math.cos(w1),z1+0.20,w1
+        goal2.x, goal2.y, goal2.z, goal2.yaw = 3.0,0.0,1.0,1.0
 
     if joy_msg.buttons[18] == 1:
         startup = 1
@@ -151,6 +153,7 @@ def callback(joy_msg):
         z1 = quad1.pose.position.z
         w1 = 2*math.acos(quad1.pose.orientation.w)
         goal2.x,goal2.y,goal2.z,goal2.yaw = x1-0.072*math.sin(w1),y1 + 0.058*math.cos(w1),z1+0.7,w1
+        goal2.x, goal2.y, goal2.z, goal2.yaw = initial_quad2_x,0.0,1.0,0.0
 
 
 
